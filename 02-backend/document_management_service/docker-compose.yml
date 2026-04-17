@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: 02-backend/document_management_service/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgresql
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    volumes:
+      - ./src/models/db/migrations/versions:/src/02-backend/document_management_service/src/models/db/migrations/versions
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: stack

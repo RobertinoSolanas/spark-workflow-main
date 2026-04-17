@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.14
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: pyrefly
+        name: pyrefly
+        entry: bash -c 'cd 05-modulcluster/modul-plausibilitaet-pruefung && uv run pyrefly check'
+        language: system
+        types: [python]
+        pass_filenames: false

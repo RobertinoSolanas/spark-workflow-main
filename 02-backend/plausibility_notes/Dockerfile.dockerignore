@@ -1,0 +1,18 @@
+# Ignore everything by default
+**
+
+# Root workspace files
+!pyproject.toml
+!uv.lock
+
+# All pyproject.toml files for dependency resolution
+!**/pyproject.toml
+.venv/**
+
+# Workspace and used shared libraries
+!02-backend/logging
+
+# Allow module code
+!02-backend/plausibility_notes/src/**
+!02-backend/plausibility_notes/alembic.ini
+!02-backend/plausibility_notes/README.md

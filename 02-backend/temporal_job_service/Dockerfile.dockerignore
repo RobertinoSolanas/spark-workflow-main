@@ -1,0 +1,17 @@
+# Ignore everything by default
+**
+
+# Root workspace files
+!pyproject.toml
+!uv.lock
+
+# All pyproject.toml files for dependency resolution
+!**/pyproject.toml
+.venv/**
+
+# Workspace and used shared libraries
+!02-backend/logging
+
+# Allow module code
+!02-backend/temporal_job_service/src/**
+!02-backend/temporal_job_service/README.md

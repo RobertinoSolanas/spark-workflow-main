@@ -1,0 +1,78 @@
+[project]
+name = "formale_pruefung"
+version = "0.1.0"
+description = ""
+authors = []
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "openai>=1.66.3,<2.0.0",
+    "pydantic-settings>=2.12.0,<3.0.0",
+    "temporal",
+    "jinja2>=3.1.6",
+    "pydantic>=2.10.6",
+    "prompt-injection",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1,<9",
+    "pytest-asyncio>=1.3.0,<2.0.0",
+    "coverage>=7.11.3,<8.0.0",
+    "interrogate>=1.7.0,<2.0.0",
+    "ipykernel>=6.29.5,<7.0.0",
+    "pytest-cov>=6.3.0",
+    "poethepoet>=0.37.0",
+    "ruff>=0.14.6,<0.15",
+    "pyrefly>=0.49.0",
+    "pytest-timeout>=2.4.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+temporal = { workspace = true }
+prompt-injection = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pyrefly]
+search_path = [".", "src"]
+project-includes = ["."]
+disable-search-path-heuristics = true
+
+[tool.pyrefly.errors]
+# Core strict typing - catch implicit Any and missing annotations
+implicit-any = "error"
+unannotated-parameter = "error"
+unannotated-return = "error"
+unannotated-attribute = "error"
+# Class strictness
+implicit-abstract-class = "error"
+implicitly-defined-attribute = "error"
+missing-override-decorator = "error"
+# TypedDict strictness
+not-required-key-access = "error"
+open-unpacking = "error"
+# Import strictness
+untyped-import = "error"
+missing-source = "error"
+missing-source-for-stubs = "error"
+# Keep warnings as errors for maximum strictness
+deprecated = "error"
+redundant-cast = "error"
+unnecessary-comparison = "error"
+
+[tool.pytest.ini_options]
+timeout=20
+testpaths = ["tests"]
+
+[tool.poe.tasks]
+test = "pytest tests/"
+lint = "ruff check ."
+format = "ruff format ."
+typecheck = "pyrefly check ."
+dev = "main.py"

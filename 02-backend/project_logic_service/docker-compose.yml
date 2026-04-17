@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: 02-backend/project_logic_service/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    container_name: project-logic-service-app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DB_HOST: postgresql
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-project_logic_db}
+      DB_PORT: ${DB_PORT:-5432}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: stack

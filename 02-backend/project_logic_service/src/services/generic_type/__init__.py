@@ -1,0 +1,1 @@
+"""Generic type service module."""

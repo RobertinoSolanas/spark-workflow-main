@@ -1,0 +1,90 @@
+publiccodeYmlVersion: '0.4'
+name: SPARK Workflow
+url: https://gitlab.opencode.de/bmds/planungs-und-genehmigungsbeschleunigung/spark-workflow
+logo: logo.svg
+softwareVersion: 0.1.0-beta
+releaseDate: '2026-03-31'
+platforms:
+- web
+categories:
+- workflow-management
+roadmap: https://gitlab.opencode.de/bmds/planungs-und-genehmigungsbeschleunigung/spark-workflow/-/blob/main/docs/roadmap.md
+developmentStatus: beta
+softwareType: standalone/web
+intendedAudience:
+  countries:
+  - de
+  scope:
+  - government
+  - infrastructures
+description:
+  de:
+    genericName: SPARK Workflow
+    shortDescription: Die KI-Module aus dem Projekt SPARK unterstützen komplexe Planungs- und Genehmigungsverfahren in der öffentlichen Verwaltung.
+    longDescription: |-
+      ## Projektzielsetzung und Kernfunktionalitäten
+
+      Im Projekt SPARK hat das Bundesministerium für Digitales und Staatsmodernisierung in den vergangenen neun Monaten KI‑Module in einer Innovationspartnerschaft entwickeln lassen. Diese KI‑Module unterstützen komplexe verwaltungsrechtliche Planungs- und Genehmigungsverfahren als operative Assistenz. Die Entwicklung wurde aus dem Klima- und Transformationsfonds des Bundesministeriums für Wirtschaft und Energie finanziert. Die KI trägt dazu bei, Verwaltungsverfahren zu beschleunigen und Beschäftigte in der öffentlichen Verwaltung bei zeitaufwändigen Tätigkeiten wirksam zu entlasten. Die Lösung ist verfahrens- und rechtsgebietsagnostisch angelegt, sodass eine breite Nachnutzbarkeit in den Verfahren von Bund, Ländern und Kommunen möglich ist. Gleichzeitig können die KI‑Module auch für andere Aufgaben jenseits von Planungs- und Genehmigungsverfahren eingesetzt werden.
+
+      Planungs- und Genehmigungsverfahren gelten als ein zentraler Flaschenhals für den Erhalt und Ausbau von Infrastruktur in Deutschland. Die zugrunde liegenden Verwaltungsverfahren sind regelmäßig komplex sowie ressourcen- und zeitintensiv. SPARK unterstützt die Mitarbeitenden in den Behörden durch einen Workflow, der sich an ihrer juristischen Arbeitsweise orientiert, sowie durch KI‑Module, die ihnen initiale Prüf- und Bewertungsvorschläge unterbreiten. Die Nutzenden treffen stets die Entscheidungen im Prüfprozess. KI‑Vorschläge können übernommen, ergänzt oder vollständig verworfen werden.
+
+      Entstanden sind mehrere Module und Services, die wesentliche Verfahrensschritte abbilden. Dazu gehören insbesondere die Inhaltsextraktion des Sachverhalts aus Antragsunterlagen, die formale und materielle Vollständigkeitsprüfung einschließlich der Plausibilitätsprüfung, die Behörden- und Öffentlichkeitsbeteiligung, die rechtliche Prüfung und Bewertung sowie die Beschlusserstellung. Ergänzt wird die KI‑Lösung durch eine digitale Rechtsdogmatik mit Gesetzesdatenbanken, automatisierter Normendekonstruktion und juristischen Bewertungsmechanismen.
+
+      ## Projektstand und Open-Source-Veröffentlichung
+
+      SPARK wird in mehreren Releases als Open Source veröffentlicht. Die Lösung befindet sich derzeit im Beta‑Status.
+
+      Die erste Veröffentlichung umfasst die Module Inhaltsextraktion und formale Vollständigkeitsprüfung einschließlich der Plausibilitätsprüfung sowie unterstützende Backend‑Dienste. Weitere Funktionen werden in den nachfolgenden Open‑Source‑Veröffentlichungen ergänzt.
+
+      Eine detaillierte Übersicht über Inhalte und Zeitpunkte der drei Releases befindet sich in der Datei [`roadmap.md`](https://gitlab.opencode.de/bmds/planungs-und-genehmigungsbeschleunigung/spark-workflow/-/blob/main/docs/roadmap.md).
+    documentation: https://gitlab.opencode.de/bmds/planungs-und-genehmigungsbeschleunigung/spark-workflow/-/blob/main/README.md
+    features:
+    - "KI-gestützte Inhaltsextraktion aus Antragsunterlagen"
+    - "Formale Vollständigkeitsprüfung eingereichter Unterlagen"
+    - "Plausibilitätsprüfung"
+    screenshots:
+    - images/image1.jpg
+    - images/image2.jpg
+    - images/image3.jpg
+    - images/image4.jpg
+  en:
+    genericName: SPARK Workflow
+    shortDescription: The AI modules from the SPARK project support complex planning and approval processes within public administration.
+    longDescription: |-
+      ## Project Objectives and Core Functionalities
+
+      Over the past nine months, the Federal Ministry for Digitalisation and State Modernisation has commissioned the development of AI modules as part of an innovation partnership within the SPARK project. These AI modules provide operational support for complex administrative planning and approval procedures. The development was funded by the Climate and Transformation Fund of the Federal Ministry for Economic Affairs and Energy. The AI helps to speed up administrative procedures and effectively relieve public sector staff of time-consuming tasks. The solution is designed to be agnostic in terms of procedures and areas of law, enabling broad reusability in the procedures of the federal, state and municipal authorities. At the same time, the AI modules can also be used for other tasks beyond planning and approval procedures.
+
+      Planning and approval procedures are considered a major bottleneck for the maintenance and expansion of infrastructure in Germany. The underlying administrative processes are often complex, resource-intensive and time-consuming. SPARK supports staff in public authorities through a workflow tailored to their legal working methods, as well as through AI modules that provide them with initial review and assessment suggestions. Users always make the decisions during the review process. AI suggestions can be adopted, supplemented or rejected entirely.
+
+      This has resulted in several modules and services that map out key procedural steps. These include, in particular, the extraction of factual content from application documents, formal and substantive completeness checks including plausibility checks, public and stakeholder engagement, legal review and assessment, and the drafting of decisions. The AI solution is complemented by a digital legal doctrine system featuring legal databases, automated analysis of legal provisions and legal assessment mechanisms.
+
+      ## Project Status and Open-Source Release
+
+      SPARK is being released as open source in several phases. The solution is currently in the beta stage.
+
+      The first release includes the content extraction and formal completeness checking modules, including plausibility checks, as well as supporting backend services. Further functions will be added in subsequent open-source releases.
+
+      A detailed overview of the contents and timing of all three releases is provided in [`roadmap.md`](https://gitlab.opencode.de/bmds/planungs-und-genehmigungsbeschleunigung/spark-workflow/-/blob/main/docs/roadmap.md)."
+    documentation: https://gitlab.opencode.de/bmds/planungs-und-genehmigungsbeschleunigung/spark-workflow/-/blob/main/README.md
+    features:
+    - "AI-assisted content extraction from application documents"
+    - "Formal completeness checks of submitted documents"
+    - "Plausibility checks"
+    screenshots:
+    - images/image1.jpg
+    - images/image2.jpg
+    - images/image3.jpg
+    - images/image4.jpg
+legal:
+  license: EUPL-1.2
+maintenance:
+  type: internal
+  contacts:
+  - name: Bundesministerium für Digitales und Staatsmodernisierung
+    email: planungsbeschleunigung@bmi.bund.de
+localisation:
+  localisationReady: true
+  availableLanguages:
+  - de
+  - en

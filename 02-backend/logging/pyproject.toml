@@ -1,0 +1,43 @@
+[project]
+name = "event-logging"
+version = "0.6.0"
+description = "Shared event logging utilities emitting ECS-style JSON."
+authors = []
+requires-python = ">=3.13, <3.14"
+dependencies = [
+    "pydantic>=2.0.0,<3",
+    "pydantic-settings>=2.0.0,<3",
+    "uuid6>=2024.7.10,<2025",
+    "typing-extensions>=4.15.0,<5",
+]
+
+[project.optional-dependencies]
+db = ["sqlalchemy>=2.0.0,<3"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1,<9",
+    "fastapi>=0.120.1",
+    "uvicorn>=0.41.0",
+    "sqlalchemy>=2.0.0,<3",
+    "httpx>=0.28.0,<0.29",
+    "pytest-cov>=6.2.1,<8",
+    "ruff>=0.14.6,<0.15",
+    "pyrefly>=0.49.0",
+]
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.sdist]
+include = ["src/event_logging"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/event_logging"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/event_logging" = "event_logging"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

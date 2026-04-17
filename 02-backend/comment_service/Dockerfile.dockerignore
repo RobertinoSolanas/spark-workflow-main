@@ -1,0 +1,15 @@
+# Ignore everything by default
+**
+
+# Root workspace files
+!pyproject.toml
+!uv.lock
+
+# All pyproject.toml files for dependency resolution
+!**/pyproject.toml
+.venv/**
+
+# Workspace and used shared libraries
+!02-backend/logging
+!02-backend/comment_service/src/**
+!02-backend/comment_service/alembic.ini

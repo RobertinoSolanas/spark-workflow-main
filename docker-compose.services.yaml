@@ -1,0 +1,216 @@
+services:
+  pls:
+    build:
+      context: .
+      dockerfile: 02-backend/project_logic_service/Dockerfile
+    env_file:
+      - 02-backend/project_logic_service/.env.local
+      - .env
+    command: "uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      DB_HOST: "postgresql"
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8004:8000"
+
+  dms:
+    build:
+      context: .
+      dockerfile: 02-backend/document_management_service/Dockerfile
+    env_file:
+      - 02-backend/document_management_service/.env.local
+      - .env
+    environment:
+      DB_HOST: "postgresql"
+      S3_ENDPOINT_URL: "http://minio:9000"
+      S3_EXTERNAL_URL: "http://localhost:9000"
+    restart: unless-stopped
+
+  dms-upload:
+    build:
+      context: .
+      dockerfile: 02-backend/document_management_service/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    env_file:
+      - 02-backend/document_management_service/.env.local
+      - .env
+    environment:
+      DB_HOST: "postgresql"
+      TEMPORAL_HOST: "http://temporal:7233"
+      S3_ENDPOINT_URL: "http://minio:9000"
+      S3_EXTERNAL_URL: "http://localhost:9000"
+    ports:
+      - "127.0.0.1:8002:8000"
+    restart: unless-stopped
+
+  agent-orchestrator:
+    build:
+      context: .
+      dockerfile: 02-backend/agent_orchestration_service/Dockerfile
+    env_file:
+      - 02-backend/agent_orchestration_service/.env.local
+      - .env
+    environment:
+      TEMPORAL_HOST: "temporal:7233"
+      API_DMS_BASE_URL: "http://dms:8000"
+      API_FVP_BASE_URL: "http://fcs:8000"
+      API_PLAUSIBILITY_NOTES_BASE_URL: "http://plausibility-notes:8000"
+    ports:
+      - "127.0.0.1:8001:8000"
+    command: "uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    restart: unless-stopped
+
+  fcs:
+    build:
+      context: .
+      dockerfile: 02-backend/formal_completeness_check/Dockerfile
+    env_file:
+      - 02-backend/formal_completeness_check/.env.local
+      - .env
+    environment:
+      DB_HOST: "postgresql"
+      DOCUMENT_MANAGEMENT_SERVICE_URL: "http://dms:8000"
+      PROJECT_LOGIC_SERVICE_URL: "http://pls:8000"
+    ports:
+      - "127.0.0.1:8003:8000"
+    restart: unless-stopped
+
+  plausibility-notes:
+    build:
+      context: .
+      dockerfile: 02-backend/plausibility_notes/Dockerfile
+    env_file:
+      - 02-backend/plausibility_notes/.env.local
+      - .env
+    environment:
+      DB_HOST: "postgresql"
+      DOCUMENT_MANAGEMENT_SERVICE_URL: "http://dms:8000"
+    restart: unless-stopped
+
+  extraction:
+    build:
+      context: .
+      dockerfile: 05-modulcluster/modul-inhaltsextraktion/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    restart: unless-stopped
+    depends_on:
+      - dms
+    env_file:
+      - 05-modulcluster/modul-inhaltsextraktion/.env.local
+      - .env
+    environment:
+      DMS_BASE_URL: "http://dms:8000"
+      DOCLING_HOST: "docling-serve"
+      TEMPORAL_SERVER_URL: "temporal:7233"
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      UNO_HOST: "unoserver"
+      QDRANT_BASE_URL: "http://qdrant:6333"
+      OTEL_ENDPOINT: "http://otel-collector:4317"
+
+  formale-pruefung:
+    build:
+      context: .
+      dockerfile: 05-modulcluster/modul-formale-pruefung/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    restart: unless-stopped
+    depends_on:
+      - dms
+    env_file:
+      - 05-modulcluster/modul-formale-pruefung/.env.local
+      - .env
+    environment:
+      TEMPORAL_HOST: "temporal:7233"
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      DMS_BASE_URL: "http://dms:8000"
+      OTEL_ENDPOINT: "http://otel-collector:4317"
+
+  plausibilitaet-pruefung:
+    build:
+      context: .
+      dockerfile: 05-modulcluster/modul-plausibilitaet-pruefung/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    restart: unless-stopped
+    depends_on:
+      - dms
+    env_file:
+      - 05-modulcluster/modul-plausibilitaet-pruefung/.env.local
+      - .env
+    environment:
+      QDRANT_CLUSTER_ENDPOINT: "http://qdrant:6333"
+      DMS_BASE_URL: "http://dms:8000"
+      TEMPORAL_HOST: "temporal:7233"
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      OTEL_ENDPOINT: "http://otel-collector:4317"
+
+  litellm-proxy:
+    build:
+      context: 04-shared-services/basiskomponenten/litellm-proxy
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:4000:4000"
+    restart: unless-stopped
+
+  unoserver:
+    build:
+      context: 04-shared-services/basiskomponenten/unoserver
+    restart: unless-stopped
+    environment:
+      CONVERSION_TIMEOUT: "120"
+
+  docling-serve:
+    image: ghcr.io/docling-project/docling-serve-cu128:latest
+    container_name: docling-serve
+    restart: always
+    expose:
+      - "5001"
+    environment:
+      # Server settings
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=5001
+      - UVICORN_TIMEOUT_KEEP_ALIVE=1800
+      # UI and timeouts
+      - DOCLING_SERVE_ENABLE_UI=1
+      - DOCLING_SERVE_MAX_DOCUMENT_TIMEOUT=1800
+      - DOCLING_SERVE_MAX_SYNC_WAIT=1800
+      - DOCLING_SERVE_LOAD_MODELS_AT_BOOT=True
+      # GPU configuration
+      - DOCLING_DEVICE=cuda:0
+      - DOCLING_CUDA_USE_FLASH_ATTENTION2=true
+      # Worker settings (single GPU - avoid contention)
+      - DOCLING_SERVE_ENG_LOC_NUM_WORKERS=1
+      - DOCLING_SERVE_ENG_LOC_SHARE_MODELS=true
+      # Batch sizes (L4 24GB safe; increase for A100: layout=128, page=64)
+      - DOCLING_PERF_PAGE_BATCH_SIZE=16
+      - DOCLING_PERF_ELEMENTS_BATCH_SIZE=16
+      - DOCLING_SERVE_LAYOUT_BATCH_SIZE=48
+      - DOCLING_SERVE_TABLE_BATCH_SIZE=4
+      - DOCLING_SERVE_OCR_BATCH_SIZE=32
+      # CPU threading
+      - DOCLING_NUM_THREADS=4
+    deploy:
+      resources:
+        limits:
+          memory: 48g
+        reservations:
+          memory: 8g
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s # Models take time to load
+
+networks:
+  default:
+    external: true
+    name: stack

@@ -1,0 +1,19 @@
+# Ignore everything by default
+**
+
+# Root workspace files
+!pyproject.toml
+!uv.lock
+
+# All pyproject.toml files for dependency resolution
+!**/pyproject.toml
+.venv/**
+
+# Workspace and used shared libraries
+!02-backend/logging
+!04-shared-services/temporal
+!04-shared-services/prompt-injection
+
+# Allow module code
+!05-modulcluster/modul-inhaltsextraktion/main.py
+!05-modulcluster/modul-inhaltsextraktion/src/**

@@ -1,0 +1,32 @@
+[
+    {
+        "category": "Teil A - Vorhabensbeschreibung",
+        "document_type_name": "Erläuterungsbericht",
+        "document_type_description": "Ein Dokument, das das beantragte Vorhaben sowie den Antragsgegenstand erläutert. Es enthält u. a. Angaben zur Planrechtfertigung, zur Abschnittsbildung, zur Vorausschau eines Gesamtvorhabens, zu vorausgegangenen Verfahrensschritten sowie regelmäßig die fachplanerische Alternativen- bzw. Variantenprüfung. Zudem setzt es sich mit den durch das Vorhaben berührten rechtlichen und fachplanerischen Belangen auseinander. Das Dokument enthält zusammenfassende Ausführungen zu den technischen Rahmenbedingungen sowie zu den umwelt- und naturschutzrechtlichen Auswirkungen des Vorhabens/ der Anlage einschließlich ggf. vorgesehener Schutzmaßnahmen.",
+        "expected_count": null
+    },
+    {
+        "category": "Teil B - Planteil",
+        "document_type_name": "Übersichtskarte",
+        "document_type_description": "Die Übersichtskarte vermittelt einen Überblick über die Lage der Baumaßnahme im Straßennetz. Sie stellt den geplanten Trassenverlauf des Vorhabens auf einer (politischen Karte grafisch mittels einer farblicher Kennzeichnung dar. Der Zusammenhang mit anderen Vorhaben von Verkehrswegeplänen soll dargestellt werden. Die Karte wird auf der Grundlage von digitalen topografischen Karten oder gegebenenfalls digitalen Luftbildern erzeugt.",
+        "expected_count": null
+    },
+    {
+        "category": "Teil B - Planteil",
+        "document_type_name": "Übersichtslageplan",
+        "document_type_description": "Ein Übersichtsplan, der den geplanten Streckenverlauf lagebezogen darstellt und die räumliche Einordnung des Vorhabens ermöglicht (u. a. Anschlussstellen/Knotenpunkte, Querungen, relevante Infrastrukturen, Schutzgebiete). Der Verlauf kann auch abschnittsweise in mehreren Übersichtslageplänen dargestellt werden. Der Plan wird regelmäßig auf der Grundlage von digitalen topografischen Karten oder digitalen Luftbildern erzeugt.",
+        "expected_count": null
+    },
+    {
+        "category": "Teil B - Planteil",
+        "document_type_name": "Grunderwerb (Grunderwerbsverzeichnis)",
+        "document_type_description": "Im Grunderwerbsverzeichnis sind alle vom Vorhaben betroffenen Liegenschaften benannt und Angaben zu deren Beanspruchung in Art und Umfang enthalten. Das Verzeichnis enthält eine tabellarische Auflistung. Die Tabelle ist fortlaufend nummeriert und enthält unter anderem Angaben zur Flur, Flurstück, Gemarkung, Nutzungsart, Grundbuch, Grundbuchblatt, Flächenbedarf und Art der in Anspruch zu nehmenden Flächen und Angaben zur ggf. erforderlichen dinglichen Sicherung / zum Erwerb der Flächen.",
+        "expected_count": null
+    },
+    {
+        "category": "Teil C - Untersuchungen, weitere Pläne, Skizzen",
+        "document_type_name": "UVP-Bericht",
+        "document_type_description": "Der UVP-Bericht dient der Umsetzung der Anforderungen aus § 16 UVPG und der Anlage 4 zum UVPG. Er stellt das Vorhaben mit seinen voraussichtlichen Umweltauswirkungen schriftlich dar und wird durch Abbildungen und Karten ergänzt. Der UVP-Bericht enthält eine Beschreibung des Vorhabens mit Angaben zum Standort, zur Art, zum Umfang und zur Ausgestaltung, zur Größe und zu anderen wesentlichen Merkmalen des Vorhabens, eine Beschreibung der Umwelt und ihrer Bestandteile im Einwirkungsbereich des Vorhabens, eine Beschreibung der Merkmale des Vorhabens und des Standorts, mit denen das Auftreten erheblicher nachteiliger Umweltauswirkungen des Vorhabens ausgeschlossen, vermindert oder ausgeglichen werden soll, eine Beschreibung der geplanten Maßnahmen, mit denen das Auftreten erheblicher nachteiliger Umweltauswirkungen des Vorhabens ausgeschlossen, vermindert oder ausgeglichen werden soll, sowie eine Beschreibung geplanter Ersatzmaßnahmen, eine Beschreibung der zu erwartenden erheblichen Umweltauswirkungen des Vorhabens, eine Beschreibung der vernünftigen Alternativen, die für das Vorhaben und seine spezifischen Merkmale relevant und vom Vorhabenträger geprüft worden sind, und die Angabe der wesentlichen Gründe für die getroffene Wahl unter Berücksichtigung der jeweiligen Umweltauswirkungen sowie eine allgemein verständliche, nichttechnische Zusammenfassung des UVP-Berichts.",
+        "expected_count": null
+    }
+]

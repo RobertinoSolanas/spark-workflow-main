@@ -1,0 +1,53 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+  groupbyattrs:
+    keys:
+      - temporal.context
+
+  # Does the following 3 things
+  # 1. Maps the temporal.context to service_name so we get color seperation for workflows and activities
+  # 2. Adds an attribute that links to the Temporal UI
+  # 3. Adds the real service name to the name so we get workflow [inhaltsextraktion] StartWorkflow
+  transform/temporal:
+    trace_statements:
+      - context: resource
+        statements:
+          - set(attributes["_service.name"], attributes["service.name"]) where attributes["service.name"] != nil
+          - set(attributes["service.name"], attributes["temporal.context"]) where attributes["temporal.context"] != nil
+      - context: span
+        statements:
+          - set(name, Concat(["[", resource.attributes["_service.name"], "] ", name], "")) where resource.attributes["_service.name"] != nil
+          - set(attributes["temporal.ui.url"], Concat(["${TEMPORAL_UI_HOST}", "/namespaces/default/workflows/", attributes["temporalWorkflowID"], "/", attributes["temporalRunID"], "/history"], "")) where attributes["temporalWorkflowID"] != nil
+    log_statements:
+      - context: resource
+        statements:
+          - set(attributes["_service.name"], attributes["service.name"]) where attributes["service.name"] != nil
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [groupbyattrs, transform/temporal, batch]
+      exporters: [otlp/tempo]
+    logs:
+      receivers: [otlp]
+      processors: [transform/temporal, batch]
+      exporters: [otlphttp/loki]
