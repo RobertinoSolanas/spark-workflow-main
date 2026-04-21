@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  namespace: spark-workflow
+  labels:
+    app: elasticsearch
+    component: search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: elasticsearch:7.17.27
+          ports:
+            - containerPort: 9200
+              name: http
+              protocol: TCP
+            - containerPort: 9300
+              name: transport
+              protocol: TCP
+          env:
+            - name: cluster.routing.allocation.disk.threshold_enabled
+              value: "true"
+            - name: cluster.routing.allocation.disk.watermark.low
+              value: 512mb
+            - name: cluster.routing.allocation.disk.watermark.high
+              value: 256mb
+            - name: cluster.routing.allocation.disk.watermark.flood_stage
+              value: 128mb
+            - name: discovery.type
+              value: single-node
+            - name: ES_JAVA_OPTS
+              value: -Xms256m -Xmx256m
+            - name: xpack.security.enabled
+              value: "false"
+            - name: ingest.geoip.downloader.enabled
+              value: "false"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: spark-workflow
+  labels:
+    app: elasticsearch
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9200
+      targetPort: 9200
+      protocol: TCP
+      name: http
+    - port: 9300
+      targetPort: 9300
+      protocol: TCP
+      name: transport
+  selector:
+    app: elasticsearch

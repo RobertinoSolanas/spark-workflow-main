@@ -1,0 +1,193 @@
+# Modul Inhaltsextraktion
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modul-inhaltsextraktion
+  namespace: spark-workflow
+  labels:
+    app: modul-inhaltsextraktion
+    component: modul
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modul-inhaltsextraktion
+  template:
+    metadata:
+      labels:
+        app: modul-inhaltsextraktion
+    spec:
+      containers:
+        - name: modul-inhaltsextraktion
+          image: spark-workflow/modul-inhaltsextraktion:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DMS_BASE_URL
+              value: http://document-management-service:8000
+            - name: DOCLING_HOST
+              value: docling-serve
+            - name: TEMPORAL_SERVER_URL
+              value: temporal:7233
+            - name: TEMPORAL_S3_ENDPOINT_URL
+              value: http://minio:9000
+            - name: UNO_HOST
+              value: unoserver
+            - name: QDRANT_BASE_URL
+              value: http://qdrant:6333
+            - name: OTEL_ENDPOINT
+              value: http://otel-collector:4317
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-access-key-id
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-secret-access-key
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+---
+# Modul Formale Pruefung
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modul-formale-pruefung
+  namespace: spark-workflow
+  labels:
+    app: modul-formale-pruefung
+    component: modul
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modul-formale-pruefung
+  template:
+    metadata:
+      labels:
+        app: modul-formale-pruefung
+    spec:
+      containers:
+        - name: modul-formale-pruefung
+          image: spark-workflow/modul-formale-pruefung:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TEMPORAL_HOST
+              value: temporal:7233
+            - name: TEMPORAL_S3_ENDPOINT_URL
+              value: http://minio:9000
+            - name: DMS_BASE_URL
+              value: http://document-management-service:8000
+            - name: OTEL_ENDPOINT
+              value: http://otel-collector:4317
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-access-key-id
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-secret-access-key
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+---
+# Modul Plausibilitaet Pruefung
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modul-plausibilitaet-pruefung
+  namespace: spark-workflow
+  labels:
+    app: modul-plausibilitaet-pruefung
+    component: modul
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modul-plausibilitaet-pruefung
+  template:
+    metadata:
+      labels:
+        app: modul-plausibilitaet-pruefung
+    spec:
+      containers:
+        - name: modul-plausibilitaet-pruefung
+          image: spark-workflow/modul-plausibilitaet-pruefung:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: QDRANT_CLUSTER_ENDPOINT
+              value: http://qdrant:6333
+            - name: DMS_BASE_URL
+              value: http://document-management-service:8000
+            - name: TEMPORAL_HOST
+              value: temporal:7233
+            - name: TEMPORAL_S3_ENDPOINT_URL
+              value: http://minio:9000
+            - name: OTEL_ENDPOINT
+              value: http://otel-collector:4317
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-access-key-id
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-secret-access-key
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 15

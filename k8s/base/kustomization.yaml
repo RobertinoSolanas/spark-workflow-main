@@ -1,0 +1,84 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace for all resources
+namespace: spark-workflow
+
+# All infrastructure and application resources
+resources:
+  # 1. Infrastructure services
+  - 01-infrastructure/postgresql-deployment.yaml
+  - 01-infrastructure/elasticsearch-deployment.yaml
+  - 01-infrastructure/minio-deployment.yaml
+  - 01-infrastructure/qdrant-deployment.yaml
+  - 01-infrastructure/temporal-deployment.yaml
+
+  # 2. Backend application services
+  - 02-applications/backend-deployments.yaml
+
+  # 3. Workflow modules
+  - 03-modules/modul-deployments.yaml
+
+  # 4. Shared services
+  - 04-shared-services/shared-services-deployments.yaml
+
+  # 5. Observability stack
+  - 05-observability/observability-deployments.yaml
+
+  # 6. External access (NodePort services)
+  - 07-external-access/external-services.yaml
+
+# Secret generator for credentials
+secretGenerator:
+  - name: spark-workflow-secrets
+    literals:
+      - db-password=spark-workflow-db-password
+      - s3-access-key-id=minioadmin
+      - s3-secret-access-key=minioadmin
+      - temporal-s3-access-key-id=temporal-s3-admin
+      - temporal-s3-secret-access-key=temporal-s3-secret
+      - litellm-api-key=spark-workflow-litellm-key
+    type: Opaque
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/part-of: spark-workflow
+  app.kubernetes.io/managed-by: kustomize
+
+# Image overrides - update these for local registry deployment
+# For local MicroK8s registry, change to:
+#   newName: localhost:32000/spark-workflow/<service-name>
+images:
+  - name: spark-workflow/temporal-codec-service
+    newName: spark-workflow/temporal-codec-service
+    newTag: latest
+  - name: spark-workflow/document-management-service
+    newName: spark-workflow/document-management-service
+    newTag: latest
+  - name: spark-workflow/agent-orchestration-service
+    newName: spark-workflow/agent-orchestration-service
+    newTag: latest
+  - name: spark-workflow/formal-completeness-check
+    newName: spark-workflow/formal-completeness-check
+    newTag: latest
+  - name: spark-workflow/plausibility-notes
+    newName: spark-workflow/plausibility-notes
+    newTag: latest
+  - name: spark-workflow/project-logic-service
+    newName: spark-workflow/project-logic-service
+    newTag: latest
+  - name: spark-workflow/modul-inhaltsextraktion
+    newName: spark-workflow/modul-inhaltsextraktion
+    newTag: latest
+  - name: spark-workflow/modul-formale-pruefung
+    newName: spark-workflow/modul-formale-pruefung
+    newTag: latest
+  - name: spark-workflow/modul-plausibilitaet-pruefung
+    newName: spark-workflow/modul-plausibilitaet-pruefung
+    newTag: latest
+  - name: spark-workflow/litellm-proxy
+    newName: spark-workflow/litellm-proxy
+    newTag: latest
+  - name: spark-workflow/unoserver
+    newName: spark-workflow/unoserver
+    newTag: latest

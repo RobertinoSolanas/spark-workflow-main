@@ -1,0 +1,212 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal
+  namespace: spark-workflow
+  labels:
+    app: temporal
+    component: workflow-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal
+  template:
+    metadata:
+      labels:
+        app: temporal
+    spec:
+      containers:
+        - name: temporal
+          image: temporalio/auto-setup:1.29.0
+          ports:
+            - containerPort: 7233
+              name: temporal
+              protocol: TCP
+          env:
+            - name: DB
+              value: postgres12
+            - name: DB_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: db-password
+            - name: POSTGRES_SEEDS
+              value: postgresql
+            - name: ENABLE_ES
+              value: "true"
+            - name: ES_SEEDS
+              value: elasticsearch
+            - name: ES_VERSION
+              value: v7
+            - name: BIND_ON_IP
+              value: 0.0.0.0
+            - name: TEMPORAL_ADDRESS
+              value: 0.0.0.0:7233
+            - name: TEMPORAL_CLI_ADDRESS
+              value: 0.0.0.0:7233
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          readinessProbe:
+            exec:
+              command:
+                - tctl
+                - --address
+                - localhost:7233
+                - cluster
+                - health
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - tctl
+                - --address
+                - localhost:7233
+                - cluster
+                - health
+            initialDelaySeconds: 30
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal
+  namespace: spark-workflow
+  labels:
+    app: temporal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7233
+      targetPort: 7233
+      protocol: TCP
+      name: temporal
+  selector:
+    app: temporal
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-admin-tools
+  namespace: spark-workflow
+  labels:
+    app: temporal-admin-tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal-admin-tools
+  template:
+    metadata:
+      labels:
+        app: temporal-admin-tools
+    spec:
+      containers:
+        - name: temporal-admin-tools
+          image: temporalio/admin-tools:1.29
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: temporal:7233
+            - name: TEMPORAL_CLI_ADDRESS
+              value: temporal:7233
+          stdin: true
+          tty: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-ui
+  namespace: spark-workflow
+  labels:
+    app: temporal-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal-ui
+  template:
+    metadata:
+      labels:
+        app: temporal-ui
+    spec:
+      containers:
+        - name: temporal-ui
+          image: temporalio/ui:2.44.1
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: temporal:7233
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-ui
+  namespace: spark-workflow
+  labels:
+    app: temporal-ui
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: temporal-ui
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: temporal-init
+  namespace: spark-workflow
+spec:
+  template:
+    spec:
+      containers:
+        - name: temporal-init
+          image: temporalio/admin-tools:1.29
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: temporal:7233
+            - name: TEMPORAL_CLI_ADDRESS
+              value: temporal:7233
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              until temporal operator cluster health --address temporal:7233 | grep -q SERVING; do
+                echo "Waiting for Temporal server to start..."
+                sleep 1
+              done
+              echo "Temporal server started."
+              until temporal operator search-attribute list --address temporal:7233 --namespace default >/dev/null 2>&1; do
+                echo "Waiting for namespace cache to refresh..."
+                sleep 1
+              done
+              echo "Namespace cache refreshed."
+              temporal operator search-attribute create --address temporal:7233 --namespace default --name ProjectId --type Keyword
+              echo "Search attribute ProjectId registered."
+              temporal operator namespace update --namespace default --retention 60d
+      restartPolicy: OnFailure
+  backoffLimit: 10

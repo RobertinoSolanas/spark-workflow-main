@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spark-workflow
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: spark-workflow
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
+    argocd.argoproj.io/manifest-pass-secret-values: "true"
+spec:
+  # Source configuration
+  source:
+    # Update this to your actual git repository URL
+    repoURL: https://github.com/<your-username>/spark-workflow.git
+    targetRevision: HEAD
+    path: k8s
+
+    # Kustomize configuration
+    kustomize:
+      commonLabels:
+        app.kubernetes.io/part-of: spark-workflow
+        app.kubernetes.io/managed-by: argocd
+        deployment-environment: local
+
+  # Destination configuration
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spark-workflow
+
+  # Project - must reference an existing ArgoCD project (default is built-in)
+  project: default
+
+  # Sync policy - automated with self-heal
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Ignore differences for secrets managed by secretGenerator
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

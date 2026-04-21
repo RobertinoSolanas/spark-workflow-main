@@ -1,0 +1,467 @@
+# Tempo - Tracing
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: spark-workflow
+  labels:
+    app: tempo
+    component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+        - name: tempo
+          image: grafana/tempo:2.9.0
+          args:
+            - "-config.file=/etc/tempo.yaml"
+          volumeMounts:
+            - name: tempo-config
+              mountPath: /etc/tempo.yaml
+              subPath: tempo.yaml
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: tempo-config
+          configMap:
+            name: tempo-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: spark-workflow
+  labels:
+    app: tempo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3200
+      targetPort: 3200
+      protocol: TCP
+      name: http
+  selector:
+    app: tempo
+---
+# Tempo ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: spark-workflow
+data:
+  tempo.yaml: |
+    server:
+      http_listen_port: 3200
+    
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+            http:
+    
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /tmp/tempo/traces
+---
+# Loki - Logging
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: spark-workflow
+  labels:
+    app: loki
+    component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: grafana/loki:3.6.3
+          args:
+            - "-config.file=/etc/loki/local-config.yaml"
+          ports:
+            - containerPort: 3100
+              name: http
+              protocol: TCP
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: spark-workflow
+  labels:
+    app: loki
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3100
+      targetPort: 3100
+      protocol: TCP
+      name: http
+  selector:
+    app: loki
+---
+# OTel Collector
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: spark-workflow
+  labels:
+    app: otel-collector
+    component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.142.0
+          args:
+            - "--config=/etc/otelcol-contrib/config.yaml"
+          volumeMounts:
+            - name: otel-config
+              mountPath: /etc/otelcol-contrib/config.yaml
+              subPath: config.yaml
+          ports:
+            - containerPort: 4317
+              name: grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: http
+              protocol: TCP
+          env:
+            - name: TEMPORAL_UI_HOST
+              value: http://temporal-ui:8080
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: otel-config
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: spark-workflow
+  labels:
+    app: otel-collector
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4317
+      targetPort: 4317
+      protocol: TCP
+      name: grpc
+    - port: 4318
+      targetPort: 4318
+      protocol: TCP
+      name: http
+  selector:
+    app: otel-collector
+---
+# OTel Collector ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: spark-workflow
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    
+    processors:
+      batch:
+    
+    exporters:
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+      otlp:
+        endpoint: tempo:4317
+        tls:
+          insecure: true
+      otlphttp/loki:
+        endpoint: http://loki:3100/loki/api/v1/push
+    
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus]
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlphttp/loki]
+---
+# Prometheus
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: spark-workflow
+  labels:
+    app: prometheus
+    component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.4.2
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yaml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time=7d"
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus/prometheus.yaml
+              subPath: prometheus.yaml
+            - name: prometheus-data
+              mountPath: /prometheus
+          ports:
+            - containerPort: 9090
+              name: http
+              protocol: TCP
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          emptyDir:
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: spark-workflow
+  labels:
+    app: prometheus
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: http
+  selector:
+    app: prometheus
+---
+# Prometheus ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: spark-workflow
+data:
+  prometheus.yaml: |
+    global:
+      scrape_interval: 15s
+    
+    scrape_configs:
+      - job_name: 'otel-collector'
+        static_configs:
+          - targets: ['otel-collector:8889']
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+      - job_name: 'tempo'
+        static_configs:
+          - targets: ['tempo:3200']
+      - job_name: 'loki'
+        static_configs:
+          - targets: ['loki:3100']
+---
+# Prometheus PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: spark-workflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+# Grafana
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: spark-workflow
+  labels:
+    app: grafana
+    component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana-oss:11.2.0
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: Admin
+          volumeMounts:
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: spark-workflow
+  labels:
+    app: grafana
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: grafana
+---
+# Grafana Datasources ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: spark-workflow
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://tempo:3200
+        isDefault: false
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki:3100
+        isDefault: false
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+---
+# Grafana Dashboards ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: spark-workflow
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards

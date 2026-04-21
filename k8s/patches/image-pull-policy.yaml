@@ -1,0 +1,36 @@
+# Kustomize patches for image pull policy
+# Apply these patches to use Never for local registry (images already in cluster)
+# or IfNotPresent for local registry
+
+# Patch all containers to use IfNotPresent imagePullPolicy
+# Add this to your kustomization.yaml patches section:
+# patches:
+#   - target:
+#       kind: Deployment
+#     patch: |
+#       apiVersion: apps/v1
+#       kind: Deployment
+#       metadata:
+#         name: not-important
+#       spec:
+#         template:
+#           spec:
+#             containers:
+#             - name: not-important
+#               imagePullPolicy: IfNotPresent
+
+# For local registry with images already in MicroK8s nodes, use:
+# imagePullPolicy: Never
+
+# Example patch for a specific deployment:
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: temporal-codec-service
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: temporal-codec-service
+#         image: localhost:32000/spark-workflow/temporal-codec-service:latest
+#         imagePullPolicy: IfNotPresent

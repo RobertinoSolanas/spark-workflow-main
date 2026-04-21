@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+  namespace: spark-workflow
+  labels:
+    app: qdrant
+    component: vector-database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+    spec:
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.17.0
+          ports:
+            - containerPort: 6333
+              name: http
+              protocol: TCP
+            - containerPort: 6334
+              name: grpc
+              protocol: TCP
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 6333
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 6333
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          volumeMounts:
+            - name: qdrant-data
+              mountPath: /qdrant/storage
+      volumes:
+        - name: qdrant-data
+          persistentVolumeClaim:
+            claimName: qdrant-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: spark-workflow
+  labels:
+    app: qdrant
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6333
+      targetPort: 6333
+      protocol: TCP
+      name: http
+    - port: 6334
+      targetPort: 6334
+      protocol: TCP
+      name: grpc
+  selector:
+    app: qdrant
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-pvc
+  namespace: spark-workflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

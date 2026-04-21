@@ -1,0 +1,230 @@
+# LiteLLM Proxy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-proxy
+  namespace: spark-workflow
+  labels:
+    app: litellm-proxy
+    component: shared
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm-proxy
+  template:
+    metadata:
+      labels:
+        app: litellm-proxy
+    spec:
+      containers:
+        - name: litellm-proxy
+          image: spark-workflow/litellm-proxy:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+              name: http
+              protocol: TCP
+          env:
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: litellm-api-key
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-proxy
+  namespace: spark-workflow
+  labels:
+    app: litellm-proxy
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4000
+      targetPort: 4000
+      protocol: TCP
+      name: http
+  selector:
+    app: litellm-proxy
+---
+# UnoServer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unoserver
+  namespace: spark-workflow
+  labels:
+    app: unoserver
+    component: shared
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unoserver
+  template:
+    metadata:
+      labels:
+        app: unoserver
+    spec:
+      containers:
+        - name: unoserver
+          image: spark-workflow/unoserver:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CONVERSION_TIMEOUT
+              value: "120"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unoserver
+  namespace: spark-workflow
+  labels:
+    app: unoserver
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: http
+  selector:
+    app: unoserver
+---
+# Docling Serve
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docling-serve
+  namespace: spark-workflow
+  labels:
+    app: docling-serve
+    component: shared
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docling-serve
+  template:
+    metadata:
+      labels:
+        app: docling-serve
+    spec:
+      containers:
+        - name: docling-serve
+          image: ghcr.io/docling-project/docling-serve-cu128:latest
+          ports:
+            - containerPort: 5001
+              name: http
+              protocol: TCP
+          env:
+            - name: UVICORN_HOST
+              value: 0.0.0.0
+            - name: UVICORN_PORT
+              value: "5001"
+            - name: UVICORN_TIMEOUT_KEEP_ALIVE
+              value: "1800"
+            - name: DOCLING_SERVE_ENABLE_UI
+              value: "1"
+            - name: DOCLING_SERVE_MAX_DOCUMENT_TIMEOUT
+              value: "1800"
+            - name: DOCLING_SERVE_MAX_SYNC_WAIT
+              value: "1800"
+            - name: DOCLING_SERVE_LOAD_MODELS_AT_BOOT
+              value: "True"
+            - name: DOCLING_DEVICE
+              value: cuda:0
+            - name: DOCLING_CUDA_USE_FLASH_ATTENTION2
+              value: "true"
+            - name: DOCLING_SERVE_ENG_LOC_NUM_WORKERS
+              value: "1"
+            - name: DOCLING_SERVE_ENG_LOC_SHARE_MODELS
+              value: "true"
+            - name: DOCLING_PERF_PAGE_BATCH_SIZE
+              value: "16"
+            - name: DOCLING_PERF_ELEMENTS_BATCH_SIZE
+              value: "16"
+            - name: DOCLING_SERVE_LAYOUT_BATCH_SIZE
+              value: "48"
+            - name: DOCLING_SERVE_TABLE_BATCH_SIZE
+              value: "4"
+            - name: DOCLING_SERVE_OCR_BATCH_SIZE
+              value: "32"
+            - name: DOCLING_NUM_THREADS
+              value: "4"
+          resources:
+            requests:
+              memory: "8Gi"
+              cpu: "500m"
+            limits:
+              memory: "48Gi"
+              cpu: "4000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 180
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 240
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docling-serve
+  namespace: spark-workflow
+  labels:
+    app: docling-serve
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5001
+      targetPort: 5001
+      protocol: TCP
+      name: http
+  selector:
+    app: docling-serve

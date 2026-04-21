@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: spark-workflow
+  labels:
+    app: minio
+    component: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          ports:
+            - containerPort: 9000
+              name: api
+              protocol: TCP
+            - containerPort: 9001
+              name: console
+              protocol: TCP
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-access-key-id
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-secret-access-key
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: minio-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: spark-workflow
+  labels:
+    app: minio
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: api
+    - port: 9001
+      targetPort: 9001
+      protocol: TCP
+      name: console
+  selector:
+    app: minio
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: spark-workflow
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio-init
+          image: minio/mc
+          env:
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-access-key-id
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: s3-secret-access-key
+            - name: TEMPORAL_S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: temporal-s3-access-key-id
+            - name: TEMPORAL_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spark-workflow-secrets
+                  key: temporal-s3-secret-access-key
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              until mc alias set local http://minio:9000 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY; do sleep 1; done;
+              mc mb -p local/dms-local || true;
+              mc mb -p local/temporal-payloads || true;
+              mc admin user svcacct add local $S3_ACCESS_KEY_ID --access-key "$S3_ACCESS_KEY_ID" --secret-key "$S3_SECRET_ACCESS_KEY" || true;
+              mc admin user svcacct add local $S3_ACCESS_KEY_ID --access-key "$TEMPORAL_S3_ACCESS_KEY_ID" --secret-key "$TEMPORAL_S3_SECRET_ACCESS_KEY" || true;
+      restartPolicy: OnFailure
+  backoffLimit: 10

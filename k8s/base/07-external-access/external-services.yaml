@@ -1,0 +1,216 @@
+# NodePort Services for external access
+# NodePort range: 30000-32767 (MicroK8s standard)
+---
+# PostgreSQL - External access (if needed)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-external
+  namespace: spark-workflow
+  labels:
+    app: postgresql
+spec:
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+      nodePort: 30432
+      protocol: TCP
+      name: postgresql
+  selector:
+    app: postgresql
+---
+# MinIO API - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-external
+  namespace: spark-workflow
+  labels:
+    app: minio
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30900
+      protocol: TCP
+      name: api
+    - port: 9001
+      targetPort: 9001
+      nodePort: 30901
+      protocol: TCP
+      name: console
+  selector:
+    app: minio
+---
+# Temporal UI - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-ui-external
+  namespace: spark-workflow
+  labels:
+    app: temporal-ui
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30808
+      protocol: TCP
+      name: http
+  selector:
+    app: temporal-ui
+---
+# Grafana - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-external
+  namespace: spark-workflow
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30300
+      protocol: TCP
+      name: http
+  selector:
+    app: grafana
+---
+# Prometheus - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-external
+  namespace: spark-workflow
+  labels:
+    app: prometheus
+spec:
+  type: NodePort
+  ports:
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
+      protocol: TCP
+      name: http
+  selector:
+    app: prometheus
+---
+# LiteLLM Proxy - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-proxy-external
+  namespace: spark-workflow
+  labels:
+    app: litellm-proxy
+spec:
+  type: NodePort
+  ports:
+    - port: 4000
+      targetPort: 4000
+      nodePort: 32000
+      protocol: TCP
+      name: http
+  selector:
+    app: litellm-proxy
+---
+# Agent Orchestration Service - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-orchestration-external
+  namespace: spark-workflow
+  labels:
+    app: agent-orchestration-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30801
+      protocol: TCP
+      name: http
+  selector:
+    app: agent-orchestration-service
+---
+# Document Management Service - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-management-external
+  namespace: spark-workflow
+  labels:
+    app: document-management-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30802
+      protocol: TCP
+      name: http
+  selector:
+    app: document-management-service
+---
+# Formal Completeness Check - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: formal-completeness-check-external
+  namespace: spark-workflow
+  labels:
+    app: formal-completeness-check
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30803
+      protocol: TCP
+      name: http
+  selector:
+    app: formal-completeness-check
+---
+# Plausibility Notes - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: plausibility-notes-external
+  namespace: spark-workflow
+  labels:
+    app: plausibility-notes
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30804
+      protocol: TCP
+      name: http
+  selector:
+    app: plausibility-notes
+---
+# Project Logic Service - External access
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-logic-external
+  namespace: spark-workflow
+  labels:
+    app: project-logic-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30805
+      protocol: TCP
+      name: http
+  selector:
+    app: project-logic-service
