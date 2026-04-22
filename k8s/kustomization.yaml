@@ -31,40 +31,42 @@ resources:
   # External access (NodePort services)
   - base/07-external-access/external-services.yaml
 
-# Image overrides for local MicroK8s registry (localhost:32000)
+# Image overrides for local MicroK8s containerd (imported via 'microk8s images import')
+# Images are built with podman and imported directly into MicroK8s containerd
+# Use 'scripts/build_local_images.sh' to build and import all images
 images:
   - name: spark-workflow/temporal-codec-service
-    newName: localhost:32000/spark-workflow/temporal-codec-service
+    newName: spark-workflow/temporal-codec-service
     newTag: latest
   - name: spark-workflow/document-management-service
-    newName: localhost:32000/spark-workflow/document-management-service
+    newName: spark-workflow/document-management-service
     newTag: latest
   - name: spark-workflow/agent-orchestration-service
-    newName: localhost:32000/spark-workflow/agent-orchestration-service
+    newName: spark-workflow/agent-orchestration-service
     newTag: latest
   - name: spark-workflow/formal-completeness-check
-    newName: localhost:32000/spark-workflow/formal-completeness-check
+    newName: spark-workflow/formal-completeness-check
     newTag: latest
   - name: spark-workflow/plausibility-notes
-    newName: localhost:32000/spark-workflow/plausibility-notes
+    newName: spark-workflow/plausibility-notes
     newTag: latest
   - name: spark-workflow/project-logic-service
-    newName: localhost:32000/spark-workflow/project-logic-service
+    newName: spark-workflow/project-logic-service
     newTag: latest
   - name: spark-workflow/modul-inhaltsextraktion
-    newName: localhost:32000/spark-workflow/modul-inhaltsextraktion
+    newName: spark-workflow/modul-inhaltsextraktion
     newTag: latest
   - name: spark-workflow/modul-formale-pruefung
-    newName: localhost:32000/spark-workflow/modul-formale-pruefung
+    newName: spark-workflow/modul-formale-pruefung
     newTag: latest
   - name: spark-workflow/modul-plausibilitaet-pruefung
-    newName: localhost:32000/spark-workflow/modul-plausibilitaet-pruefung
+    newName: spark-workflow/modul-plausibilitaet-pruefung
     newTag: latest
   - name: spark-workflow/litellm-proxy
-    newName: localhost:32000/spark-workflow/litellm-proxy
+    newName: spark-workflow/litellm-proxy
     newTag: latest
   - name: spark-workflow/unoserver
-    newName: localhost:32000/spark-workflow/unoserver
+    newName: spark-workflow/unoserver
     newTag: latest
 
 # Labels for all resources
@@ -74,3 +76,18 @@ labels:
       app.kubernetes.io/managed-by: kustomize
       deployment-environment: local
   - includeSelectors: false
+
+# Set imagePullPolicy to IfNotPresent for all deployments
+# This is needed for locally imported images in MicroK8s
+patches:
+  - target:
+      kind: Deployment
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      spec:
+        template:
+          spec:
+            containers:
+            - name: not-important
+              imagePullPolicy: IfNotPresent
