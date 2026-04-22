@@ -11,7 +11,7 @@ metadata:
 spec:
   source:
     repoURL: https://github.com/RobertinoSolanas/spark-workflow-main.git
-    targetRevision: HEAD
+    targetRevision: 20dd411e10607fcaf8e655ce21df9a86426820ce
     path: k8s
     kustomize:
       commonLabels:
