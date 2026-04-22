@@ -82,5 +82,7 @@ labels:
 patches:
   - target:
       kind: Deployment
-    patch: '[{"op":"add","path":"/spec/template/spec/containers/0/imagePullPolicy","value":"IfNotPresent"}]'
-    targetSelector: null
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
