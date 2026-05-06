@@ -156,6 +156,8 @@ spec:
         app: qdrant
         component: infrastructure
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: qdrant
           image: qdrant/qdrant:v1.17.0
