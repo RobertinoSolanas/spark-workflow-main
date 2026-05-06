@@ -1,0 +1,81 @@
+[project]
+name = "2-inhaltsextraktion-und-suche"
+version = "0.1.0"
+description = "Repository for extracting information from documents"
+authors = []
+requires-python = ">=3.13,<3.14"
+readme = "README.md"
+dependencies = [
+    "temporal",
+    "tiktoken>=0.12.0",
+    "unoserver==3.5",
+    "instructor>=1.12.0",
+    "beautifulsoup4>=4.14.3",
+    "google-auth>=2.40.3",
+    "pillow>=12.1.1",
+    "pypdfium2>=5.3.0",
+    "pikepdf>=9.0.0",
+    "imagehash>=4.3.2",
+    "qdrant-client>=1.16.1,<2.0.0",
+    "prompt-injection",
+]
+
+[tool.uv.sources]
+temporal = { workspace = true }
+prompt-injection = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=6.2.1,<7",
+    "pytest-mock>=3.14.1,<4",
+    "interrogate>=1.7.0,<2",
+    "pytest>=8.4.1,<9",
+    "pytest-asyncio>=1.3.0",
+    "pytest-timeout>=2.3.1",
+    "ruff>=0.14.6,<0.15",
+    "pyrefly>=0.49.0",
+]
+
+[tool.uv]
+package = false
+constraint-dependencies = [
+    "aiohttp>=3.13.3",
+    "urllib3>=2.6.3",
+    "filelock>=3.20.3",
+    "marshmallow>=3.26.2",
+    "virtualenv>=20.36.1",
+    "protobuf>=6.33.5",
+    "pyasn1>=0.6.2",
+    "jsonpointer>=3.1.1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+timeout = 20
+
+[tool.pyrefly]
+search_path = ["."]
+project-includes = ["."]
+disable-search-path-heuristics = true
+
+[tool.pyrefly.errors]
+implicit-any = "error"
+unannotated-parameter = "error"
+unannotated-return = "error"
+unannotated-attribute = "error"
+implicit-abstract-class = "error"
+implicitly-defined-attribute = "error"
+missing-override-decorator = "error"
+not-required-key-access = "error"
+open-unpacking = "error"
+untyped-import = "error"
+missing-source = "error"
+missing-source-for-stubs = "error"
+deprecated = "error"
+redundant-cast = "error"
+unnecessary-comparison = "error"

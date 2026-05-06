@@ -1,0 +1,214 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: spark-workflow
+  labels:
+    app: minio
+    component: infrastructure
+spec:
+  serviceName: minio
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+        component: infrastructure
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio
+          imagePullPolicy: Never
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          envFrom:
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secrets
+                  key: S3_SECRET_ACCESS_KEY
+          ports:
+            - containerPort: 9000
+              name: api
+              protocol: TCP
+            - containerPort: 9001
+              name: console
+              protocol: TCP
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: spark-workflow
+  labels:
+    app: minio
+    component: infrastructure
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: api
+    - port: 9001
+      targetPort: 9001
+      name: console
+  selector:
+    app: minio
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data
+  namespace: spark-workflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: spark-workflow
+  labels:
+    app: minio
+    component: infrastructure
+spec:
+  template:
+    metadata:
+      labels:
+        app: minio
+        component: infrastructure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: minio-mc
+          image: minio/mc
+          imagePullPolicy: Never
+          envFrom:
+            - secretRef:
+                name: postgresql-secrets
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until mc alias set local http://minio:9000 $S3_ACCESS_KEY_ID $S3_SECRET_ACCESS_KEY; do sleep 1; done
+              mc mb -p local/dms-local || true
+              mc mb -p local/temporal-payloads || true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qdrant-config
+  namespace: spark-workflow
+data:
+  storage.conf: |
+    storage:
+      data_path: /qdrant/storage
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: spark-workflow
+  labels:
+    app: qdrant
+    component: infrastructure
+spec:
+  serviceName: qdrant
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+        component: infrastructure
+    spec:
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.17.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 6333
+              name: http
+              protocol: TCP
+            - containerPort: 6334
+              name: grpc
+              protocol: TCP
+          volumeMounts:
+            - name: qdrant-data
+              mountPath: /qdrant/storage
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: spark-workflow
+  labels:
+    app: qdrant
+    component: infrastructure
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6333
+      targetPort: 6333
+      name: http
+    - port: 6334
+      targetPort: 6334
+      name: grpc
+  selector:
+    app: qdrant
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-data
+  namespace: spark-workflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

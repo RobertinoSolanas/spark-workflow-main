@@ -1,0 +1,55 @@
+[project]
+name = "temporal"
+version = "0.1.0"
+description = "Add your description here"
+authors = []
+requires-python = ">=3.13, <3.14"
+dependencies = [
+    "python-ulid>=3.1.0",
+    "event-logging",
+    "aioboto3>=14.0.0",
+    "types-aioboto3[s3]>=14.0.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.39.1",
+    "opentelemetry-sdk>=1.39.1",
+    "opentelemetry-api>=1.39.1",
+    "temporalio[opentelemetry]>=1.24.0",
+]
+
+[tool.uv.sources]
+event-logging = { workspace = true }
+
+[tool.hatch.build.targets.sdist]
+include = ["src/temporal"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/temporal"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/temporal" = "temporal"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pyrefly]
+search_path = [".", "src"]
+project-includes = ["."]
+disable-search-path-heuristics = true
+
+[tool.pyrefly.errors]
+implicit-any = "error"
+unannotated-parameter = "error"
+unannotated-return = "error"
+unannotated-attribute = "error"
+implicit-abstract-class = "error"
+implicitly-defined-attribute = "error"
+missing-override-decorator = "error"
+not-required-key-access = "error"
+open-unpacking = "error"
+untyped-import = "error"
+missing-source = "error"
+missing-source-for-stubs = "error"
+deprecated = "error"
+redundant-cast = "error"
+unnecessary-comparison = "error"
+

@@ -1,0 +1,164 @@
+import traceback
+
+import httpx
+from event_logging.enums import (
+    EventAction,
+    EventCategory,
+    EventOutcome,
+    LogEventDefault,
+)
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
+from tenacity import RetryError
+
+from src.exceptions.exceptions import ForbiddenError, NotFoundError
+from src.utils.logger import logger
+
+
+def _detail_from_exception(exc: Exception, fallback: str) -> str:
+    message = str(exc).strip()
+    return message if message else fallback
+
+
+def _detail_from_integrity_error(_exc: IntegrityError) -> str:
+    return "Resource conflict during database operation"
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    """Register global exception handlers so routes can stay lean."""
+
+    @app.exception_handler(NotFoundError)
+    async def handle_not_found_error(request: Request, exc: NotFoundError):
+        logger.warn(
+            action=EventAction.READ,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.RESOURCE_NOT_FOUND,
+            message=f"NotFoundError on {request.url.path}: {exc}",
+        )
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"detail": _detail_from_exception(exc, "Resource not found")},
+        )
+
+    @app.exception_handler(FileNotFoundError)
+    async def handle_file_not_found_error(request: Request, exc: FileNotFoundError):
+        logger.warn(
+            action=EventAction.READ,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.FILE,
+            default_event=LogEventDefault.RESOURCE_NOT_FOUND,
+            message=f"FileNotFoundError on {request.url.path}: {exc}",
+        )
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"detail": _detail_from_exception(exc, "File not found")},
+        )
+
+    @app.exception_handler(IntegrityError)
+    async def handle_integrity_error(request: Request, exc: IntegrityError):
+        logger.error(
+            action=EventAction.WRITE,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.DATABASE,
+            default_event=LogEventDefault.DB_ERROR,
+            message=f"IntegrityError on {request.url.path}: {exc}",
+        )
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"detail": _detail_from_integrity_error(exc)},
+        )
+
+    @app.exception_handler(ValueError)
+    async def handle_value_error(request: Request, exc: ValueError):
+        logger.warn(
+            action=EventAction.VALIDATE,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.VALIDATION_FAILURE,
+            message=f"ValueError on {request.url.path}: {exc}",
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": _detail_from_exception(exc, "Invalid request data")},
+        )
+
+    @app.exception_handler(ForbiddenError)
+    async def handle_forbidden_error(request: Request, exc: ForbiddenError):
+        logger.warn(
+            action=EventAction.ACCESS,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.GENERAL,
+            message=f"ForbiddenError on {request.url.path}: {exc}",
+        )
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": _detail_from_exception(exc, "Operation not permitted")},
+        )
+
+    @app.exception_handler(httpx.HTTPStatusError)
+    async def handle_http_status_error(request: Request, exc: httpx.HTTPStatusError):
+        upstream = exc.response.status_code
+        logger.error(
+            action=EventAction.ACCESS,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.GENERAL,
+            message=f"External service error on {request.url.path}: upstream returned {upstream}",
+        )
+        if upstream == 404:
+            return JSONResponse(status_code=404, content={"detail": "Resource not found"})
+        if 400 <= upstream < 500:
+            return JSONResponse(status_code=400, content={"detail": "Bad request"})
+        return JSONResponse(status_code=502, content={"detail": "Service temporarily unavailable"})
+
+    @app.exception_handler(RetryError)
+    async def handle_retry_error(request: Request, exc: RetryError):
+        cause = exc.__cause__
+        if isinstance(cause, httpx.HTTPStatusError):
+            upstream = cause.response.status_code
+            logger.error(
+                action=EventAction.ACCESS,
+                outcome=EventOutcome.FAILURE,
+                category=EventCategory.API,
+                default_event=LogEventDefault.GENERAL,
+                message=f"External service error after retries on {request.url.path}: upstream returned {upstream}",
+            )
+            if upstream == 404:
+                return JSONResponse(status_code=404, content={"detail": "Resource not found"})
+            if 400 <= upstream < 500:
+                return JSONResponse(status_code=400, content={"detail": "Bad request"})
+            return JSONResponse(status_code=502, content={"detail": "Service temporarily unavailable"})
+        logger.error(
+            action=EventAction.ACCESS,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.GENERAL,
+            message=f"Retry exhausted on {request.url.path}: {exc}",
+        )
+        return JSONResponse(status_code=502, content={"detail": "Service temporarily unavailable"})
+
+    @app.exception_handler(httpx.RequestError)
+    async def handle_request_error(request: Request, exc: httpx.RequestError):
+        logger.error(
+            action=EventAction.ACCESS,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.GENERAL,
+            message=f"External service connection error on {request.url.path}: {type(exc).__name__}",
+        )
+        return JSONResponse(status_code=502, content={"detail": "Service temporarily unavailable"})
+
+    @app.exception_handler(Exception)
+    async def handle_generic_exception(request: Request, _exc: Exception):
+        logger.error(
+            action=EventAction.ACCESS,
+            outcome=EventOutcome.FAILURE,
+            category=EventCategory.API,
+            default_event=LogEventDefault.GENERAL,
+            message=f"Unhandled exception on {request.url.path}",
+            error_message=traceback.format_exc(),
+        )
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})

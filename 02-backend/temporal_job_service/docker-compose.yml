@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: 02-backend/temporal_job_service/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    container_name: temporal-jobs-module
+    environment:
+      TEMPORAL_ADDRESS: ${TEMPORAL_ADDRESS:-temporal:7233}
+      TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: stack

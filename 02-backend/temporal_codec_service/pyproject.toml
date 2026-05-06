@@ -1,0 +1,43 @@
+[project]
+name = "temporal-codec-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13, <3.14"
+dependencies = [
+    "fastapi>=0.116.2",
+    "protobuf>=6.33.1",
+    "temporal",
+    "uvicorn>=0.41.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.6,<0.15",
+    "pyrefly>=0.49.0",
+]
+
+[tool.uv.sources]
+temporal = { workspace = true }
+
+[tool.pyrefly]
+search_path = ["."]
+project-includes = ["."]
+disable-search-path-heuristics = true
+
+[tool.pyrefly.errors]
+implicit-any = "error"
+unannotated-parameter = "error"
+unannotated-return = "error"
+unannotated-attribute = "error"
+implicit-abstract-class = "error"
+implicitly-defined-attribute = "error"
+missing-override-decorator = "error"
+not-required-key-access = "error"
+open-unpacking = "error"
+untyped-import = "error"
+missing-source = "error"
+missing-source-for-stubs = "error"
+deprecated = "error"
+redundant-cast = "error"
+unnecessary-comparison = "error"

@@ -1,0 +1,434 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comment-service
+  namespace: spark-workflow
+  labels:
+    app: comment-service
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comment-service
+  template:
+    metadata:
+      labels:
+        app: comment-service
+        component: backend
+    spec:
+      containers:
+        - name: comment-service
+          image: spark-backend-comment-service:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: DB_HOST
+              value: "postgresql"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comment-service
+  namespace: spark-workflow
+  labels:
+    app: comment-service
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: comment-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-management-service
+  namespace: spark-workflow
+  labels:
+    app: document-management-service
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: document-management-service
+  template:
+    metadata:
+      labels:
+        app: document-management-service
+        component: backend
+    spec:
+      containers:
+        - name: dms
+          image: spark-backend-document-management-service:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: DB_HOST
+              value: "postgresql"
+            - name: S3_ENDPOINT_URL
+              value: "http://minio:9000"
+            - name: S3_EXTERNAL_URL
+              value: "http://minio:9000"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-management-service
+  namespace: spark-workflow
+  labels:
+    app: document-management-service
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: document-management-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-logic-service
+  namespace: spark-workflow
+  labels:
+    app: project-logic-service
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-logic-service
+  template:
+    metadata:
+      labels:
+        app: project-logic-service
+        component: backend
+    spec:
+      containers:
+        - name: pls
+          image: spark-backend-project-logic-service:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: DB_HOST
+              value: "postgresql"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-logic-service
+  namespace: spark-workflow
+  labels:
+    app: project-logic-service
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: project-logic-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: formal-completeness-check
+  namespace: spark-workflow
+  labels:
+    app: formal-completeness-check
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: formal-completeness-check
+  template:
+    metadata:
+      labels:
+        app: formal-completeness-check
+        component: backend
+    spec:
+      containers:
+        - name: fcs
+          image: spark-backend-formal-completeness-check:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: DB_HOST
+              value: "postgresql"
+            - name: DOCUMENT_MANAGEMENT_SERVICE_URL
+              value: "http://document-management-service:8000"
+            - name: PROJECT_LOGIC_SERVICE_URL
+              value: "http://project-logic-service:8000"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: formal-completeness-check
+  namespace: spark-workflow
+  labels:
+    app: formal-completeness-check
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: formal-completeness-check
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plausibility-notes
+  namespace: spark-workflow
+  labels:
+    app: plausibility-notes
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plausibility-notes
+  template:
+    metadata:
+      labels:
+        app: plausibility-notes
+        component: backend
+    spec:
+      containers:
+        - name: plausibility-notes
+          image: spark-backend-plausibility-notes:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: DB_HOST
+              value: "postgresql"
+            - name: DOCUMENT_MANAGEMENT_SERVICE_URL
+              value: "http://document-management-service:8000"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plausibility-notes
+  namespace: spark-workflow
+  labels:
+    app: plausibility-notes
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: plausibility-notes
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-orchestration-service
+  namespace: spark-workflow
+  labels:
+    app: agent-orchestration-service
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-orchestration-service
+  template:
+    metadata:
+      labels:
+        app: agent-orchestration-service
+        component: backend
+    spec:
+      containers:
+        - name: agent-orchestrator
+          image: spark-backend-agent-orchestration-service:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: TEMPORAL_HOST
+              value: "temporal:7233"
+            - name: API_DMS_BASE_URL
+              value: "http://document-management-service:8000"
+            - name: API_FVP_BASE_URL
+              value: "http://formal-completeness-check:8000"
+            - name: API_PLAUSIBILITY_NOTES_BASE_URL
+              value: "http://plausibility-notes:8000"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-orchestration-service
+  namespace: spark-workflow
+  labels:
+    app: agent-orchestration-service
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: agent-orchestration-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-codec-service
+  namespace: spark-workflow
+  labels:
+    app: temporal-codec-service
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal-codec-service
+  template:
+    metadata:
+      labels:
+        app: temporal-codec-service
+        component: backend
+    spec:
+      containers:
+        - name: codec
+          image: spark-backend-temporal-codec-service:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: postgresql-secrets
+          env:
+            - name: TEMPORAL_S3_ENDPOINT_URL
+              value: "http://minio:9000"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-codec-service
+  namespace: spark-workflow
+  labels:
+    app: temporal-codec-service
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: temporal-codec-service
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: spark-workflow

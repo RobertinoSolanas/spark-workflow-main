@@ -1,0 +1,22 @@
+model_list:
+  - model_name: gpt-oss-120b
+    litellm_params:
+      model: openai/openai/gpt-oss-120b
+      api_base: os.environ/VLLM_URL
+      api_key: os.environ/VLLM_API_KEY
+  - model_name: mistral-small-24b-instruct
+    litellm_params:
+      model: openai/mistralai/Mistral-Small-24B-Instruct
+      api_base: os.environ/VLLM_URL
+      api_key: os.environ/VLLM_API_KEY
+  - model_name: BAAI/bge-m3
+    litellm_params:
+      model: openai/BAAI/bge-m3
+      api_base: os.environ/VLLM_URL
+      api_key: os.environ/VLLM_API_KEY
+
+litellm_settings:
+  drop_params: true
+  callbacks: ["prometheus"]
+  master_key: os.environ/LITELLM_MASTER_KEY
+  ui: false

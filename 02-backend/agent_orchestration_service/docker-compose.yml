@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: 02-backend/agent_orchestration_service/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    container_name: agent-orchestration-service-app
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: stack

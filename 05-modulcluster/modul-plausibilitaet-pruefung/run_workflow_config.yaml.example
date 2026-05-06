@@ -1,0 +1,8 @@
+# Configuration for run_workflow.py (local test trigger).
+# Copy this file to run_workflow_config.yaml and fill in your IDs.
+# run_workflow_config.yaml is gitignored and must not be committed.
+
+project_id: "00000000-0000-0000-0000-000000000001"
+document_ids:
+  - "00000000-0000-0000-0000-000000000002"
+classification_file_id: "00000000-0000-0000-0000-000000000003" | null

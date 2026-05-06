@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: 02-backend/formal_completeness_check/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    container_name: fcs-app
+    environment:
+      DB_HOST: postgresql
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-fcs-db}
+      DB_PORT: ${DB_PORT:-5432}
+      ENV: ${ENV:-dev}
+      SERVICE_NAME: ${SERVICE_NAME:-formal_completness_check}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      DOCUMENT_MANAGEMENT_SERVICE_URL: ${DOCUMENT_MANAGEMENT_SERVICE_URL}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: stack

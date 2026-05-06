@@ -1,0 +1,86 @@
+[project]
+name = "spark-workflow"
+version = "0.1.0"
+description = "SPARK Workflow"
+requires-python = ">=3.13, <3.14"
+
+[tool.uv]
+managed = true
+override-dependencies = [
+    "llvmlite>=0.43",
+    "numba>=0.60",
+]
+
+[tool.uv.workspace]
+members = [
+    "02-backend/agent_orchestration_service",
+    "02-backend/comment_service",
+    "02-backend/document_management_service",
+    "02-backend/formal_completeness_check",
+    "02-backend/logging",
+    "02-backend/plausibility_notes",
+    "02-backend/project_logic_service",
+    "02-backend/temporal_codec_service",
+    "02-backend/temporal_job_service",
+    "04-shared-services/prompt-injection",
+    "04-shared-services/temporal",
+    "05-modulcluster/modul-formale-pruefung",
+    "05-modulcluster/modul-plausibilitaet-pruefung",
+    "05-modulcluster/modul-inhaltsextraktion"
+]
+
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.6,<0.15",
+    "pyrefly>=0.49.0",
+    "watchfiles>=1.1.1",
+    "poethepoet>=0.37.0",
+]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["__pycache__"]
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+
+extend-select = [
+    # pyupgrade
+    "UP",
+    # Isort
+    "I",
+    # Maccabe
+    "C901",
+    # Eradicate
+    "ERA",
+    # flake8-bugbear
+    "B",
+    # pep8-naming
+    "N",
+    # flake8-builtins
+    "A",
+    # flake8-comprehensions
+    "C4",
+    # flake8-debugger
+    "T10",
+]
+
+ignore = [
+    # FastApi recommends to use `Depend()` as an argument default.
+    "B008",
+    # `input` is the standard Temporal workflow/activity parameter name
+    "A002",
+    # APIs are forcing camelCase (removed when we have generated api clients)
+    "N815"
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.poe.tasks.pyrefly-all]
+help = "Run pyrefly check in each uv workspace member"
+cmd = "sh scripts/pyrefly_all.sh"

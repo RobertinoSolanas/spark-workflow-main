@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: 02-backend/plausibility_notes/Dockerfile
+      args:
+        INCLUDE_DEPENDENCIES: dev
+    container_name: plausibility-notes-app
+    environment:
+      DB_HOST: postgresql
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-microservice_db}
+      DB_PORT: ${DB_PORT:-5432}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: stack

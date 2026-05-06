@@ -1,0 +1,40 @@
+from enum import StrEnum
+
+
+class WorkflowStatusEnum(StrEnum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELED = "CANCELED"
+    TERMINATED = "TERMINATED"
+    CONTINUED_AS_NEW = "CONTINUED_AS_NEW"
+    TIMED_OUT = "TIMED_OUT"
+    REQUIRES_APPROVAL = "REQUIRES_APPROVAL"
+
+
+class ErrorCode(StrEnum):
+    VALIDATION_FAILED = "VALIDATION_FAILED"
+    ZIP_INVALID = "ZIP_INVALID"
+    ZIP_NOT_FOUND = "ZIP_NOT_FOUND"
+    FILE_NOT_FOUND = "FILE_NOT_FOUND"
+    UPLOAD_FAILED = "UPLOAD_FAILED"
+    DELETE_FAILED = "DELETE_FAILED"
+    RENAME_FAILED = "RENAME_FAILED"
+
+
+class ActionEnum(StrEnum):
+    INGEST = "INGEST"
+    DELETE = "DELETE"
+    RENAME = "RENAME"
+    UNZIP = "UNZIP"
+
+
+class ApprovalStatus(StrEnum):
+    APPROVED = "APPROVED"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
+
+
+class WorkflowEnum(StrEnum):
+    FILE_PROCESSING = "FileProcessingWorkflow"

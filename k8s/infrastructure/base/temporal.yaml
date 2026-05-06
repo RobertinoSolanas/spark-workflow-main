@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: temporal
+  namespace: spark-workflow
+  labels:
+    app: temporal
+    component: infrastructure
+spec:
+  serviceName: temporal
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal
+  template:
+    metadata:
+      labels:
+        app: temporal
+        component: infrastructure
+    spec:
+      containers:
+        - name: temporal
+          image: temporalio/auto-setup:1.29.0
+          imagePullPolicy: Never
+          env:
+            - name: DB
+              value: "postgres12"
+            - name: DB_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_SEEDS
+              value: "postgresql"
+            - name: DYNAMIC_CONFIG_FILE_PATH
+              value: "config/dynamicconfig/development-sql.yaml"
+            - name: ENABLE_ES
+              value: "true"
+            - name: ES_SEEDS
+              value: "elasticsearch"
+            - name: ES_VERSION
+              value: "v7"
+            - name: BIND_ON_IP
+              value: "0.0.0.0"
+            - name: TEMPORAL_ADDRESS
+              value: "0.0.0.0:7233"
+            - name: TEMPORAL_CLI_ADDRESS
+              value: "0.0.0.0:7233"
+          ports:
+            - containerPort: 7233
+              name: frontend
+              protocol: TCP
+            - containerPort: 7234
+              name: metrics
+              protocol: TCP
+          volumeMounts:
+            - name: temporal-dynamic-config
+              mountPath: /etc/temporal/config/dynamicconfig
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          readinessProbe:
+            exec:
+              command:
+                - temporal
+                - operator
+                - cluster
+                - health
+                - --address
+                - temporal:7233
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: temporal-dynamic-config
+  namespace: spark-workflow
+data:
+  development-sql.yaml: |
+    limit:
+      searchAttributes: 100
+    visibility:
+      numOfShards: 4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal
+  namespace: spark-workflow
+  labels:
+    app: temporal
+    component: infrastructure
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7233
+      targetPort: 7233
+      name: frontend
+    - port: 7234
+      targetPort: 7234
+      name: metrics
+  selector:
+    app: temporal
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: temporal-dynamic-config
+  namespace: spark-workflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Mi
+  storageClassName: ""
+  volumeMode: Filesystem

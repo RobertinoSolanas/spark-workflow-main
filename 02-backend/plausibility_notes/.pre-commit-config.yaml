@@ -1,0 +1,61 @@
+files: ^02-backend/plausibility_notes
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-ast                 # Checks Python files for syntax errors by parsing the AST
+      - id: check-added-large-files   # Prevents accidentally committing very large files
+      - id: check-merge-conflict      # Detects unresolved merge conflict markers in files
+      - id: check-case-conflict       # Checks for filename conflicts that differ only in case
+      - id: check-json                # Validates that JSON files are properly formatted
+      - id: check-yaml                # Validates that YAML files are properly formatted
+      - id: debug-statements          # Warns if there are debug statements like print() or pdb
+      - id: end-of-file-fixer         # Ensures files end with a newline character
+      - id: trailing-whitespace       # Removes trailing whitespace from lines
+      - id: mixed-line-ending         # Normalizes line endings across files (LF vs CRLF)
+
+  - repo: https://github.com/python-poetry/poetry
+    rev: 2.1.3
+    hooks:
+      # Check the lock file is up to date with requirements.
+      - id: poetry-check
+        args: ["-C", "02-backend/plausibility_notes", "--lock"]
+        always_run: true
+
+  - repo: local
+    hooks:
+      # Runs the ruff linter
+      - id: ruff
+        name: ruff
+        entry: bash -c 'cd 02-backend/plausibility_notes && poetry run ruff check --fix'
+        language: system
+        types: [python]
+        always_run: true
+        pass_filenames: true
+
+      # Runs the ruff formatter
+      - id: ruff-format
+        name: ruff-format
+        entry: bash -c 'cd 02-backend/plausibility_notes && poetry run ruff format'
+        language: system
+        types: [python]
+        always_run: true
+        pass_filenames: true
+
+      # Runs mypy
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd 02-backend/plausibility_notes && mypy src'
+        language: system
+        types: [ python ]
+        always_run: true
+        pass_filenames: true
+
+      # Runs the CI prechecks locally
+      - id: ci-precheck
+        name: ci-precheck
+        entry: bash -c 'cd 02-backend/plausibility_notes && poetry run bash ../../03-infrastructure-resources/tooling/ci-precheck/ci-precheck.sh'
+        language: system
+        types: [python]
+        always_run: true
+        pass_filenames: false
