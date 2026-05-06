@@ -2,13 +2,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: spark-workflow
-  namespace: spark-workflow
+  namespace: argocd
   labels:
     app.kubernetes.io/part-of: spark-workflow
 spec:
   project: default
   source:
-    repoURL: https://github.com/RobertinoSolanas/spark-workflow-main.git
+    repoURL: git@github.com:RobertinoSolanas/spark-workflow-main.git
     targetRevision: main
     path: deployment/charts/spark-workflow
     helm:
