@@ -1,0 +1,383 @@
+namespace: spark-workflow
+
+registry: localhost:32000
+
+infra:
+  imagePullSecret: ""
+  postgresql:
+    enabled: true
+    image:
+      repository: spark-infra-postgresql
+      tag: "16.10"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    storage:
+      size: 10Gi
+    env:
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "postgres"
+  elasticsearch:
+    enabled: true
+    image:
+      repository: spark-infra-elasticsearch
+      tag: "7.17.27"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    storage:
+      size: 10Gi
+  minio:
+    enabled: true
+    image:
+      repository: spark-infra-minio
+      tag: latest
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    storage:
+      size: 10Gi
+    accessKey: "${S3_ACCESS_KEY_ID}"
+    secretKey: "${S3_SECRET_ACCESS_KEY}"
+  qdrant:
+    enabled: true
+    image:
+      repository: spark-infra-qdrant
+      tag: "v1.17.0"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    storage:
+      size: 10Gi
+  temporal:
+    enabled: true
+    image:
+      repository: spark-infra-temporal
+      tag: "1.29.0"
+    adminTools:
+      image:
+        repository: spark-infra-temporal-admin-tools
+        tag: "1.29"
+    ui:
+      enabled: true
+      image:
+        repository: spark-infra-temporal-ui
+        tag: "2.44.1"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB: "postgres12"
+      DB_PORT: "5432"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PWD: "${DB_PASSWORD}"
+      POSTGRES_SEEDS: "postgresql"
+      ENABLE_ES: "true"
+      ES_SEEDS: "elasticsearch"
+      ES_VERSION: "v7"
+      BIND_ON_IP: "0.0.0.0"
+      TEMPORAL_ADDRESS: "0.0.0.0:7233"
+      TEMPORAL_CLI_ADDRESS: "0.0.0.0:7233"
+  observability:
+    tempo:
+      enabled: true
+      image:
+        repository: spark-infra-tempo
+        tag: "2.9.0"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+    loki:
+      enabled: true
+      image:
+        repository: spark-infra-loki
+        tag: "3.6.3"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+    prometheus:
+      enabled: true
+      image:
+        repository: spark-infra-prometheus
+        tag: "v3.4.2"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      storage:
+        size: 10Gi
+    grafana:
+      enabled: true
+      image:
+        repository: spark-infra-grafana
+        tag: "11.2.0"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      env:
+        GF_AUTH_ANONYMOUS_ENABLED: "true"
+        GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+    otel:
+      enabled: true
+      image:
+        repository: spark-infra-otel-collector
+        tag: "0.142.0"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+
+backend:
+  comment-service:
+    enabled: true
+    image:
+      repository: spark-backend-comment-service
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+      DB_NAME: "comment_service_db"
+  document-management:
+    enabled: true
+    image:
+      repository: spark-backend-document-management-service
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+      S3_ENDPOINT_URL: "http://minio:9000"
+  project-logic:
+    enabled: true
+    image:
+      repository: spark-backend-project-logic-service
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+      DB_NAME: "project_logic"
+  formal-completeness-check:
+    enabled: true
+    image:
+      repository: spark-backend-formal-completeness-check
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  plausibility-notes:
+    enabled: true
+    image:
+      repository: spark-backend-plausibility-notes
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  agent-orchestration:
+    enabled: true
+    image:
+      repository: spark-backend-agent-orchestration-service
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      TEMPORAL_HOST: "temporal:7233"
+      API_DMS_BASE_URL: "http://document-management:8000"
+      API_FVP_BASE_URL: "http://formal-completeness-check:8000"
+      API_PLAUSIBILITY_NOTES_BASE_URL: "http://plausibility-notes:8000"
+  temporal-codec:
+    enabled: true
+    image:
+      repository: spark-backend-temporal-codec-service
+      tag: latest
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      TEMPORAL_HOST: "temporal:7233"
+
+ai-modules:
+  extraction:
+    enabled: true
+    image:
+      repository: spark-ai-extraction
+      tag: latest
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    env:
+      DMS_BASE_URL: "http://document-management:8000"
+      DOCLING_HOST: "docling-serve"
+      TEMPORAL_SERVER_URL: "temporal:7233"
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      UNO_HOST: "unoserver"
+      QDRANT_BASE_URL: "http://qdrant:6333"
+      OTEL_ENDPOINT: "http://otel-collector:4317"
+  formale-pruefung:
+    enabled: true
+    image:
+      repository: spark-ai-formale-pruefung
+      tag: latest
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    env:
+      TEMPORAL_HOST: "temporal:7233"
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      DMS_BASE_URL: "http://document-management:8000"
+      OTEL_ENDPOINT: "http://otel-collector:4317"
+  plausibilitaet-pruefung:
+    enabled: true
+    image:
+      repository: spark-ai-plausibilitaet-pruefung
+      tag: latest
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    env:
+      QDRANT_CLUSTER_ENDPOINT: "http://qdrant:6333"
+      DMS_BASE_URL: "http://document-management:8000"
+      TEMPORAL_HOST: "temporal:7233"
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      OTEL_ENDPOINT: "http://otel-collector:4317"
+
+shared:
+  litellm-proxy:
+    enabled: true
+    image:
+      repository: spark-shared-litellm-proxy
+      tag: latest
+    port: 4000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  unoserver:
+    enabled: true
+    image:
+      repository: spark-shared-unoserver
+      tag: latest
+    port: 9000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      CONVERSION_TIMEOUT: "120"
+  docling-serve:
+    enabled: true
+    image:
+      repository: spark-infra-docling-serve
+      tag: latest
+    resources:
+      limits:
+        cpu: "4"
+        memory: 16Gi
+      requests:
+        cpu: "2"
+        memory: 4Gi
+    env:
+      DOCLING_SERVE_LOAD_MODELS_AT_BOOT: "True"
+      DOCLING_NUM_THREADS: "4"

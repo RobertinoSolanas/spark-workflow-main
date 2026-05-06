@@ -1,0 +1,6 @@
+apiVersion: v2
+name: spark-shared
+description: Shared services chart (litellm-proxy, unoserver)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

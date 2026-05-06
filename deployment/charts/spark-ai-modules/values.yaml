@@ -1,0 +1,43 @@
+namespace: spark-workflow
+
+ai-modules:
+  extraction:
+    enabled: true
+    image: localhost:32000/spark-ai-extraction
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    env:
+      DMS_BASE_URL: "http://document-management:8000"
+      QDRANT_BASE_URL: "http://qdrant:6333"
+  formale-pruefung:
+    enabled: true
+    image: localhost:32000/spark-ai-formale-pruefung
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    env:
+      TEMPORAL_HOST: "temporal:7233"
+      DMS_BASE_URL: "http://document-management:8000"
+  plausibilitaet-pruefung:
+    enabled: true
+    image: localhost:32000/spark-ai-plausibilitaet-pruefung
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    env:
+      QDRANT_CLUSTER_ENDPOINT: "http://qdrant:6333"
+      DMS_BASE_URL: "http://document-management:8000"
+      TEMPORAL_HOST: "temporal:7233"

@@ -1,0 +1,27 @@
+namespace: spark-workflow
+
+shared:
+  litellm-proxy:
+    enabled: true
+    image: localhost:32000/spark-shared-litellm-proxy
+    port: 4000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  unoserver:
+    enabled: true
+    image: localhost:32000/spark-shared-unoserver
+    port: 9000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      CONVERSION_TIMEOUT: "120"

@@ -1,0 +1,95 @@
+namespace: spark-workflow
+
+backend:
+  comment-service:
+    enabled: true
+    image: localhost:32000/spark-backend-comment-service
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  document-management:
+    enabled: true
+    image: localhost:32000/spark-backend-document-management-service
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  project-logic:
+    enabled: true
+    image: localhost:32000/spark-backend-project-logic-service
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  formal-completeness-check:
+    enabled: true
+    image: localhost:32000/spark-backend-formal-completeness-check
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  plausibility-notes:
+    enabled: true
+    image: localhost:32000/spark-backend-plausibility-notes
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB_HOST: "postgresql"
+  agent-orchestration:
+    enabled: true
+    image: localhost:32000/spark-backend-agent-orchestration-service
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      TEMPORAL_HOST: "temporal:7233"
+  temporal-codec:
+    enabled: true
+    image: localhost:32000/spark-backend-temporal-codec-service
+    port: 8000
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      TEMPORAL_S3_ENDPOINT_URL: "http://minio:9000"
+      TEMPORAL_HOST: "temporal:7233"

@@ -1,0 +1,118 @@
+namespace: spark-workflow
+
+infra:
+  postgresql:
+    enabled: true
+    image:
+      repository: localhost:32000/spark-infra-postgresql
+      tag: "16.10"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    storage:
+      size: 10Gi
+    env:
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "postgres"
+  elasticsearch:
+    enabled: true
+    image:
+      repository: localhost:32000/spark-infra-elasticsearch
+      tag: "7.17.27"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    storage:
+      size: 10Gi
+  minio:
+    enabled: true
+    image:
+      repository: localhost:32000/spark-infra-minio
+      tag: latest
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    storage:
+      size: 10Gi
+    accessKey: "${S3_ACCESS_KEY_ID}"
+    secretKey: "${S3_SECRET_ACCESS_KEY}"
+  qdrant:
+    enabled: true
+    image:
+      repository: localhost:32000/spark-infra-qdrant
+      tag: "v1.17.0"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    storage:
+      size: 10Gi
+  temporal:
+    enabled: true
+    image: registry.localhost:32000/spark-infra-temporal
+    adminRegistry: localhost:32000
+    uiRegistry: localhost:32000
+    adminTools:
+      image: localhost:32000/spark-infra-temporal-admin-tools
+    ui:
+      enabled: true
+      image: localhost:32000/spark-infra-temporal-ui
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    env:
+      DB: "postgres12"
+      DB_PORT: "5432"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PWD: "${DB_PASSWORD}"
+      POSTGRES_SEEDS: "postgresql"
+      ENABLE_ES: "true"
+      ES_SEEDS: "elasticsearch"
+      ES_VERSION: "v7"
+      BIND_ON_IP: "0.0.0.0"
+      TEMPORAL_ADDRESS: "0.0.0.0:7233"
+      TEMPORAL_CLI_ADDRESS: "0.0.0.0:7233"
+  observability:
+    tempo:
+      enabled: true
+      image: localhost:32000/spark-infra-tempo
+    loki:
+      enabled: true
+      image: localhost:32000/spark-infra-loki
+    prometheus:
+      enabled: true
+      image: localhost:32000/spark-infra-prometheus
+      storage:
+        size: 10Gi
+    grafana:
+      enabled: true
+      image: localhost:32000/spark-infra-grafana
+      env:
+        GF_AUTH_ANONYMOUS_ENABLED: "true"
+        GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+    otel:
+      enabled: true
+      image: localhost:32000/spark-infra-otel-collector
+  docling-serve:
+    enabled: true
+    image: localhost:32000/spark-infra-docling-serve
