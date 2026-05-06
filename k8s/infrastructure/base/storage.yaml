@@ -21,7 +21,7 @@ spec:
       containers:
         - name: minio
           image: minio/minio
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           args:
             - server
             - /data
@@ -114,7 +114,7 @@ spec:
       containers:
         - name: minio-mc
           image: minio/mc
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: postgresql-secrets
@@ -159,7 +159,7 @@ spec:
       containers:
         - name: qdrant
           image: qdrant/qdrant:v1.17.0
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6333
               name: http

@@ -21,7 +21,7 @@ spec:
       containers:
         - name: elasticsearch
           image: elasticsearch:7.17.27
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           env:
             - name: cluster.routing.allocation.disk.threshold_enabled
               value: "true"

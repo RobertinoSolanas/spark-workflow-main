@@ -63,7 +63,7 @@ spec:
       containers:
         - name: postgresql
           image: postgres:16.10
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: postgresql-config

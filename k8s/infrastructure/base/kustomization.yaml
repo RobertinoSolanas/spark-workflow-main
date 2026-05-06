@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: spark-workflow
 resources:
   - namespace.yaml
+  - persistent-volumes.yaml
   - postgresql.yaml
   - elasticsearch.yaml
   - temporal.yaml
