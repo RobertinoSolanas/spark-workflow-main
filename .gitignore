@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ruff_cache/
+*.coverage
+coverage.json
+*.log
+
+# Environments
+.venv
+.env
+.env.*
+!.env.local
+
+# IDEs
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
+.idea/
+
+# Misc files
+.DS_Store
+*.pdf
+*.PDF
+
+node_modules
+.pnpm
