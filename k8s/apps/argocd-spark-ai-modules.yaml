@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/RobertinoSolanas/spark-workflow-main.git
-    targetRevision: 9310d3e
+    targetRevision: a3d8757920e92a590a9ec55f2eadb5b202743b79
     path: k8s/ai-modules/base
     kustomize:
       namespace: spark-workflow
