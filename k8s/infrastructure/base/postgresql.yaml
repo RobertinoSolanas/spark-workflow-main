@@ -92,6 +92,9 @@ spec:
         - name: init-sql
           configMap:
             name: postgresql-init
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
 ---
 apiVersion: v1
 kind: ConfigMap
