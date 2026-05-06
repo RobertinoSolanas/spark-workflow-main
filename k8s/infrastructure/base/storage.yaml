@@ -184,6 +184,7 @@ spec:
                drop:
                  - ALL
              readOnlyRootFilesystem: false
+             runAsUser: 0
       volumes:
         - name: qdrant-data
           persistentVolumeClaim:
