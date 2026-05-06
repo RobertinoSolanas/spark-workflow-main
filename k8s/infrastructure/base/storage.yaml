@@ -179,13 +179,11 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: false
-            runAsNonRoot: true
-            runAsUser: 1000
+           securityContext:
+             capabilities:
+               drop:
+                 - ALL
+             readOnlyRootFilesystem: false
       volumes:
         - name: qdrant-data
           persistentVolumeClaim:
