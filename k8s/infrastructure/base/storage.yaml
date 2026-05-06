@@ -185,10 +185,9 @@ spec:
                  - ALL
              readOnlyRootFilesystem: false
              runAsUser: 0
-      volumes:
-        - name: qdrant-data
-          persistentVolumeClaim:
-            claimName: qdrant-data
+       volumes:
+         - name: qdrant-data
+           emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -211,13 +210,4 @@ spec:
     app: qdrant
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: qdrant-data
-  namespace: spark-workflow
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+kind: Service
